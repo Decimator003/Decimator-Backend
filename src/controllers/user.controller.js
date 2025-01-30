@@ -3,6 +3,8 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 
 const generateAccessAndRefreshTokens = async(userId) => {
@@ -120,10 +122,10 @@ const loginUser = asyncHandler(async(req,res) => {
 
     const {accessToken, refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
-    const loggedInUser = User.findById(user._id).select("-password -refreshToken")
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
     const options = {
         httpOnly: true,
-        secure:  true,
+        secure:  true
     }
 
     return res
@@ -132,16 +134,17 @@ const loginUser = asyncHandler(async(req,res) => {
     .cookie("refreshToken", refreshToken, options)
     .json(
         new ApiResponse(
-            200,{
+            200, 
+            {
                 user: loggedInUser, accessToken, refreshToken
             },
-            "User logged in successfully"
+            "User logged In Successfully"
         )
     )
 
 })
 
-const logoutUser = asyncHandler(async(res, req) => {
+const logoutUser = asyncHandler(async(req, res) => {
     //clear cookies
     //remove refresh token from db
     //send response
